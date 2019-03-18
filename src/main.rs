@@ -1,21 +1,17 @@
 use git2::Repository;
 
-fn get_reflog() -> git2::Reflog {
+fn main() {
 
     let repo = match Repository::open("/home/attila/dev/projects/TypeScript") {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
 
-    match repo.reflog("HEAD") {
+    let reflog = match repo.reflog("HEAD") {
         Ok(reflog) => reflog,
         Err(e) => panic!("could not open reflog: {}", e)
-    }
-}
+    };
 
-fn main() {
-
-    let reflog = get_reflog();
     println!("reflog length: {}", reflog.len());
 
     for entry in reflog.iter() {
@@ -23,5 +19,26 @@ fn main() {
             Some(msg) => println!("entry {}", msg),
             None => ()
         }        
+    }
+
+    let branches = match(repo.branches(None)) {
+        Ok(branches) => branches,
+        Err(e) => panic!("could not open branches: {}", e)
+    };
+
+    for branch in branches {
+        
+        match branch {
+            Ok((branch, branch_type)) => {
+                let name = branch.name();
+
+                match name {
+                    Ok(Some(branch_name)) => println!("branch name: {}", branch_name),
+                    Ok(None) => println!("could not read branch name"),
+                    Err(e) => panic!("could not read branch name: {}", e)
+                }
+            },
+            Err(e) => panic!("error while iterating through branches")
+        }            
     }
 }
